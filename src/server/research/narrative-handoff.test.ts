@@ -79,6 +79,7 @@ describe("Narrative Radar → KillMyThesis handoff", () => {
   const thesis = startingTheses(reading).form;
 
   it("carries the narrative id and editable thesis through the URL without running", () => {
+    expect(new URL(handoffHref("ai-compute", thesis), "http://localhost").pathname).toBe("/thesis");
     const form = parseHandoff(Object.fromEntries(new URL(handoffHref("ai-compute", thesis), "http://localhost").searchParams));
     expect(form).toEqual({ thesis, autoRun: false, narrative: { id: "ai-compute", name: "AI / Compute", assets: AI.assets } });
 

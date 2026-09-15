@@ -23,7 +23,7 @@ export function HistoryList() {
         <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-ink-soft">
           Completed research from the live engine is saved here automatically. Sample previews are never saved.
         </p>
-        <Link href="/" className={`${buttonPrimary} mt-6`}>
+        <Link href="/thesis" className={`${buttonPrimary} mt-6`}>
           Kill a thesis
         </Link>
       </div>

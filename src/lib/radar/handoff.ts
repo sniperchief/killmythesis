@@ -15,11 +15,14 @@ export interface NarrativeHandoff {
 
 export const MAX_HANDOFF_THESIS = 2000;
 
+/** The KillMyThesis workspace. The home page is a landing page. */
+export const THESIS_PATH = "/thesis";
+
 /** `run` launches research immediately; it is only used after the user has seen and confirmed the thesis. */
 export function handoffHref(narrativeId: string, thesis: string, run = false): string {
   const params = new URLSearchParams({ thesis: thesis.slice(0, MAX_HANDOFF_THESIS), narrative: narrativeId });
   if (run) params.set("run", "1");
-  return `/?${params.toString()}`;
+  return `${THESIS_PATH}?${params.toString()}`;
 }
 
 type SearchParams = Record<string, string | string[] | undefined>;
