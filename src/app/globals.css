@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* KillMyThesis visual system: off-white paper, near-black ink, hairline rules,
+   one accent (signal orange), and semantic tones for evidence direction. */
+@theme {
+  --color-paper: #fafaf8;
+  --color-surface: #ffffff;
+  --color-ink: #0c0c0d;
+  --color-ink-soft: #3a3a3f;
+  --color-muted: #6b6b73;
+  --color-faint: #9d9da5;
+  --color-line: #e6e6e1;
+  --color-line-strong: #cdcdc7;
+  --color-accent: #ff4d00;
+
+  --color-support: #0b7a4b;
+  --color-support-wash: #e8f4ed;
+  --color-challenge: #c0322a;
+  --color-challenge-wash: #fbeceb;
+  --color-caution: #8f6100;
+  --color-caution-wash: #faf2de;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot {
+    animation: none;
+  }
+}
