@@ -75,9 +75,9 @@ export function ThesisComposer({
               submit();
             }}
           >
-            <div className={`flex items-center justify-between border-b border-line px-5 py-3 text-muted ${monoMeta}`}>
-              <span className="text-ink">Your thesis</span>
-              <span className={length > MAX_LENGTH - 100 ? "text-caution" : ""}>
+            <div className={`flex items-center justify-between bg-accent px-5 py-3 text-white ${monoMeta}`}>
+              <span className="font-bold">Your thesis</span>
+              <span className={length > MAX_LENGTH - 100 ? "font-bold" : "text-white/85"}>
                 {value.length} / {MAX_LENGTH}
               </span>
             </div>
