@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { PAGE, monoMeta } from "@/components/ui/styles";
 import { DATA_MODE } from "@/lib/config";
+import { Logo } from "./Logo";
 
 const PRODUCT = [
   { href: "/thesis", label: "Kill my thesis" },
@@ -43,7 +44,7 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-4">
             <Link href="/" className="inline-flex items-center gap-2 font-mono text-[15px] font-semibold tracking-tight">
-              <span aria-hidden className="h-2.5 w-2.5 bg-accent" />
+              <Logo />
               killmythesis
             </Link>
             <p className="mt-4 max-w-xs text-[14.5px] leading-relaxed text-paper/65">

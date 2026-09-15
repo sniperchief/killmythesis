@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { DATA_MODE } from "@/lib/config";
+import { Logo } from "./Logo";
 
 const NAV = [
   { href: "/thesis", label: "Kill my thesis", isActive: (p: string) => p.startsWith("/thesis") },
@@ -34,7 +35,7 @@ export function Header() {
           onClick={() => setOpen(false)}
           className="flex shrink-0 items-center gap-2 font-mono text-[15px] font-semibold tracking-tight text-paper"
         >
-          <span aria-hidden className="h-2.5 w-2.5 bg-accent" />
+          <Logo />
           killmythesis
         </Link>
 
