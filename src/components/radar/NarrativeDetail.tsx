@@ -5,16 +5,16 @@ import { monoMeta } from "@/components/ui/styles";
 import { fmtFunding, fmtPct, fmtPts, fmtShare, fmtUsd, startingTheses } from "@/lib/radar/engine";
 import type { AssetReading, NarrativeReading, RadarSnapshot } from "@/lib/radar/types";
 import { Freshness } from "./Freshness";
-import { signTone, StageText } from "./RadarView";
+import { signTone, StageText } from "./Stage";
 import { Sparkline } from "./Sparkline";
 import { ThesisHandoff } from "./ThesisHandoff";
 
 function Section({ n, title, children }: { n: string; title: string; children: ReactNode }) {
   return (
     <section>
-      <div className="flex items-baseline gap-3 border-b border-ink pb-2">
-        <span className="font-mono text-[11px] font-medium text-accent">{n}</span>
-        <h2 className="font-mono text-[12px] font-semibold uppercase tracking-[0.14em]">{title}</h2>
+      <div className="flex items-baseline gap-3 border-b-2 border-ink pb-3">
+        <span className="font-mono text-[12px] font-medium text-accent">{n}</span>
+        <h2 className="font-display text-[22px] font-bold leading-none tracking-[-0.02em] sm:text-[26px]">{title}</h2>
       </div>
       <div className="mt-5">{children}</div>
     </section>
@@ -110,7 +110,7 @@ export function NarrativeDetail({
       <header className="mt-6 border-b border-line pb-6">
         <Label>Narrative research</Label>
         <div className="mt-3 flex flex-wrap items-end gap-x-5 gap-y-2">
-          <h1 className="text-[34px] font-semibold uppercase leading-none tracking-[-0.02em] sm:text-[48px]">{reading.name}</h1>
+          <h1 className="font-display text-[40px] font-bold leading-none tracking-[-0.035em] sm:text-[58px]">{reading.name}</h1>
           <StageText reading={reading} className="pb-1 text-[15px] tracking-[0.16em]" />
         </div>
         <p className="mt-3 max-w-2xl text-[14.5px] leading-relaxed text-ink-soft">{reading.description}</p>
@@ -244,7 +244,7 @@ export function NarrativeDetail({
         </div>
 
         <aside className="lg:col-span-4">
-          <div className="lg:sticky lg:top-20">
+          <div className="lg:sticky lg:top-28">
             <Section n="04" title="Want to investigate further?">
               <div className="border border-ink bg-surface p-5">
                 <ThesisHandoff

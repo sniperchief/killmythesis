@@ -2,28 +2,19 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Label, SampleNotice, ToneBadge } from "@/components/ui/primitives";
 import { PAGE, monoMeta } from "@/components/ui/styles";
-import { NARRATIVE_STATE_META, NARRATIVE_STATE_ORDER, TONE_TEXT } from "@/lib/labels";
+import { NARRATIVE_STATE_META, NARRATIVE_STATE_ORDER } from "@/lib/labels";
 import { RADAR_RULES, fmtFunding, fmtPct, fmtPts, fmtShare } from "@/lib/radar/engine";
 import type { NarrativeReading, RadarSnapshot } from "@/lib/radar/types";
 import { Freshness } from "./Freshness";
+import { NarrativeCard } from "./NarrativeCard";
 import { Sparkline } from "./Sparkline";
+import { signTone, StageText } from "./Stage";
+
+export { signTone, StageText } from "./Stage";
 
 const LOOP = ["Discover", "Investigate", "Form thesis", "Kill thesis", "Decide"];
-const COLS = "lg:grid-cols-[minmax(0,1.6fr)_7.5rem_7rem_5rem_6rem_6rem_1rem]";
-
-export const signTone = (n: number) => (n >= 0.05 ? "text-support" : n <= -0.05 ? "text-challenge" : "text-ink-soft");
-
-export function StageText({ reading, className = "" }: { reading: NarrativeReading; className?: string }) {
-  if (!reading.lifecycle) {
-    return <span className={`font-mono text-[11px] uppercase tracking-[0.1em] text-muted ${className}`}>Insufficient data</span>;
-  }
-  const meta = NARRATIVE_STATE_META[reading.lifecycle];
-  return (
-    <span className={`font-mono text-[12px] font-semibold uppercase tracking-[0.12em] ${TONE_TEXT[meta.tone]} ${className}`}>
-      {meta.label}
-    </span>
-  );
-}
+const COLS = "lg:grid-cols-[2.5rem_minmax(0,1.6fr)_7.5rem_7rem_5rem_6rem_6rem_1rem]";
+const FEATURED = 3;
 
 function Cell({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -34,7 +25,7 @@ function Cell({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function NarrativeRow({ reading }: { reading: NarrativeReading }) {
+function NarrativeRow({ reading, rank }: { reading: NarrativeReading; rank: number }) {
   const m = reading.metrics;
   return (
     <li>
@@ -42,6 +33,7 @@ function NarrativeRow({ reading }: { reading: NarrativeReading }) {
         href={`/radar/${reading.id}`}
         className={`group block px-4 py-4 transition-colors hover:bg-paper sm:px-5 lg:grid ${COLS} lg:items-center lg:gap-5`}
       >
+        <span className="hidden font-mono text-[11px] text-faint lg:block">{String(rank).padStart(2, "0")}</span>
         <div className="flex items-baseline justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[16px] font-medium">{reading.name}</div>
@@ -77,61 +69,87 @@ function NarrativeRow({ reading }: { reading: NarrativeReading }) {
   );
 }
 
-function Meta({ label, children }: { label: string; children: ReactNode }) {
+function Stat({ label, children, note }: { label: string; children: ReactNode; note?: string }) {
   return (
-    <div className="flex gap-2">
-      <dt className="text-faint">{label}</dt>
-      <dd className="text-ink">{children}</dd>
+    <div className="border-b border-r border-line bg-surface p-5">
+      <div className={`text-muted ${monoMeta}`}>{label}</div>
+      <div className="mt-2 font-display text-[24px] font-bold tracking-[-0.02em] tabular-nums sm:text-[28px]">{children}</div>
+      {note && <div className="mt-1 text-[12px] text-muted">{note}</div>}
     </div>
   );
 }
 
-const RULES = [
-  `Relative performance: median 7-day return of the tracked assets minus BTC's. Breadth: share of tracked assets up over 7 days. Participation: share beating BTC.`,
-  `Accelerating: relative performance ≥ ${fmtPts(RADAR_RULES.strongRelative7d)} with ≥ ${fmtShare(RADAR_RULES.strongParticipation)} of assets beating BTC, and no week-over-week deterioration.`,
-  `Emerging: relative momentum up ≥ ${RADAR_RULES.momentumShift} pts or participation up ≥ ${fmtShare(RADAR_RULES.participationShift)} week over week, positive relative performance, ≥ 50% beating BTC, and no 30-day run of ${fmtPts(RADAR_RULES.extendedRelative30d)} yet.`,
-  `Crowded: accelerating-strength 7-day performance after a ≥ ${fmtPts(RADAR_RULES.extendedRelative30d)} 30-day run, with median funding ≥ ${fmtFunding(RADAR_RULES.fundingElevated8h)} per 8h or median volume ≥ ${fmtPct(RADAR_RULES.volumeSurge)}.`,
-  `Exhausting: still strong or extended, but relative momentum slowed ≥ ${RADAR_RULES.momentumShift} pts or participation fell ≥ ${fmtShare(RADAR_RULES.participationShift)} week over week.`,
-  `Fading: relative performance ≤ ${fmtPts(RADAR_RULES.weakRelative7d)} with ≤ ${fmtShare(RADAR_RULES.weakParticipation)} of assets beating BTC, or negative and deteriorating.`,
-  `Stable: none of the above.`,
-  `Coverage: below ${fmtShare(RADAR_RULES.coverage.insufficientBelow)} of tracked assets (or fewer than ${RADAR_RULES.coverage.minAssets}) → not classified; below ${fmtShare(RADAR_RULES.coverage.reducedBelow)} → reduced data confidence.`,
+function SectionHeading({ label, title, children }: { label: string; title: string; children?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <Label>{label}</Label>
+        <h2 className="mt-3 font-display text-[28px] font-bold leading-none tracking-[-0.025em] sm:text-[36px]">{title}</h2>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const RULES: [string, string][] = [
+  ["Accelerating", `Relative performance ≥ ${fmtPts(RADAR_RULES.strongRelative7d)} with ≥ ${fmtShare(RADAR_RULES.strongParticipation)} of assets beating BTC, and no week-over-week deterioration.`],
+  ["Emerging", `Relative momentum up ≥ ${RADAR_RULES.momentumShift} pts or participation up ≥ ${fmtShare(RADAR_RULES.participationShift)} week over week, positive relative performance, ≥ 50% beating BTC, and no 30-day run of ${fmtPts(RADAR_RULES.extendedRelative30d)} yet.`],
+  ["Crowded", `Strong 7-day performance after a ≥ ${fmtPts(RADAR_RULES.extendedRelative30d)} 30-day run, with median funding ≥ ${fmtFunding(RADAR_RULES.fundingElevated8h)} per 8h or median volume ≥ ${fmtPct(RADAR_RULES.volumeSurge)}.`],
+  ["Exhausting", `Still strong or extended, but relative momentum slowed ≥ ${RADAR_RULES.momentumShift} pts or participation fell ≥ ${fmtShare(RADAR_RULES.participationShift)} week over week.`],
+  ["Fading", `Relative performance ≤ ${fmtPts(RADAR_RULES.weakRelative7d)} with ≤ ${fmtShare(RADAR_RULES.weakParticipation)} of assets beating BTC, or negative and deteriorating.`],
+  ["Stable", "None of the above."],
+  ["Coverage", `Below ${fmtShare(RADAR_RULES.coverage.insufficientBelow)} of tracked assets (or fewer than ${RADAR_RULES.coverage.minAssets}) → not classified; below ${fmtShare(RADAR_RULES.coverage.reducedBelow)} → reduced data confidence.`],
 ];
 
 export function RadarView({ snapshot }: { snapshot: RadarSnapshot }) {
-  const classified = snapshot.narratives.filter((n) => n.lifecycle).length;
+  const classified = snapshot.narratives.filter((n) => n.lifecycle);
+  const featured = classified.filter((n) => n.metrics).slice(0, FEATURED);
   const b = snapshot.benchmark;
 
   return (
-    <div className={`${PAGE} py-10 lg:py-14`}>
-      <Label>Discover</Label>
-      <h1 className="mt-4 text-[34px] font-semibold uppercase leading-none tracking-[-0.02em] sm:text-[48px]">Narrative radar</h1>
-      <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
-        Find where market attention and participation are moving.
-      </p>
+    <div className={`${PAGE} pb-20 pt-10 sm:pt-14`}>
+      <header className="grid gap-6 border-b border-line pb-10 lg:grid-cols-12 lg:items-end">
+        <div className="lg:col-span-7">
+          <Label>Narrative radar</Label>
+          <h1 className="mt-4 font-display text-[40px] font-bold leading-[1] tracking-[-0.035em] sm:text-[58px]">
+            See where the market is moving.
+          </h1>
+        </div>
+        <div className="lg:col-span-5">
+          <p className="text-[15.5px] leading-relaxed text-ink-soft">
+            Momentum and participation across {snapshot.narratives.length} market narratives, measured from Bitget
+            market data. Find a narrative worth investigating, then turn it into a thesis and try to kill it.
+          </p>
+          <ol className={`mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted ${monoMeta}`}>
+            {LOOP.map((step, i) => (
+              <li key={step} className="flex items-center gap-2">
+                <span className={i === 0 ? "text-ink" : ""}>{step}</span>
+                {i < LOOP.length - 1 && <span className="text-accent">→</span>}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </header>
 
-      <ol className={`mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-muted ${monoMeta}`}>
-        {LOOP.map((step, i) => (
-          <li key={step} className="flex items-center gap-2">
-            <span className={i === 0 ? "text-ink" : ""}>{step}</span>
-            {i < LOOP.length - 1 && <span className="text-accent">→</span>}
-          </li>
-        ))}
-      </ol>
-
-      <dl className={`mt-8 flex flex-wrap gap-x-8 gap-y-2 border-y border-line py-3 ${monoMeta}`}>
-        <Meta label="Market data">
+      <div className="mt-8 grid grid-cols-2 border-l border-t border-line lg:grid-cols-4">
+        <Stat label="Market data" note="Bitget daily candles, cached briefly">
           <Freshness iso={snapshot.generatedAt} />
-        </Meta>
-        <Meta label="Coverage">
-          {snapshot.assetsAvailable}/{snapshot.assetsConfigured} assets · {classified}/{snapshot.narratives.length} classified
-        </Meta>
-        <Meta label="Benchmark">{b ? `BTC ${fmtPct(b.return7d)} 7D` : "BTC unavailable"}</Meta>
-      </dl>
+        </Stat>
+        <Stat label="Assets covered" note="returned usable data">
+          {snapshot.assetsAvailable}/{snapshot.assetsConfigured}
+        </Stat>
+        <Stat label="Classified" note="narratives with enough data">
+          {classified.length}/{snapshot.narratives.length}
+        </Stat>
+        <Stat label="Benchmark · BTC 7D" note={b ? `30D ${fmtPct(b.return30d)}` : "unavailable"}>
+          {b ? <span className={signTone(b.return7d)}>{fmtPct(b.return7d)}</span> : "—"}
+        </Stat>
+      </div>
       <p className="mt-3 max-w-3xl text-[12.5px] leading-relaxed text-muted">
-        Classification based on Bitget daily spot price and volume, with perpetual funding and open interest where
-        available{snapshot.positioningNote ? ` (${snapshot.positioningNote.replace(/\.$/, "")})` : ""}. News, sentiment
-        and on-chain coverage are not part of the radar. Stages describe observed behavior; they are not predictions or
-        trade signals.
+        Classification uses Bitget spot price and volume, plus perpetual funding and open interest where available
+        {snapshot.positioningNote ? ` (${snapshot.positioningNote.replace(/\.$/, "")})` : ""}. News, sentiment and
+        on-chain data are not part of the radar. Stages describe observed behavior; they are not predictions or trade
+        signals.
       </p>
 
       {snapshot.mode === "sample" && (
@@ -152,55 +170,86 @@ export function RadarView({ snapshot }: { snapshot: RadarSnapshot }) {
         </div>
       )}
 
-      <div className="mt-6 border border-line bg-surface">
-        <div className={`hidden gap-5 border-b border-line px-5 py-2.5 text-muted lg:grid ${COLS} ${monoMeta}`}>
-          <span>Narrative</span>
-          <span>Stage</span>
-          <span>Momentum 7D</span>
-          <span>Breadth</span>
-          <span>vs BTC 7D</span>
-          <span>Trend 30D</span>
-          <span />
-        </div>
-        <ul className="divide-y divide-line">
-          {snapshot.narratives.map((reading) => (
-            <NarrativeRow key={reading.id} reading={reading} />
-          ))}
-        </ul>
-      </div>
-      <p className="mt-2 text-[12px] text-muted">
-        Ranked by stage, then by the size of the move relative to BTC. Each narrative is measured through a basket of
-        representative assets, not every token in the sector.
-      </p>
+      {featured.length > 0 && (
+        <section className="mt-16">
+          <SectionHeading label="Where to look first" title="Top of the radar right now." />
+          <ol className="mt-8 grid border-l border-t border-line md:grid-cols-3">
+            {featured.map((reading, i) => (
+              <li key={reading.id} className="border-b border-r border-line">
+                <NarrativeCard reading={reading} rank={i + 1} detailed className="bg-surface hover:bg-paper" />
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
-      <section className="mt-12">
-        <Label>Lifecycle stages</Label>
-        <dl className="mt-3 grid border-l border-t border-line sm:grid-cols-2 lg:grid-cols-3">
+      <section className="mt-16">
+        <SectionHeading label="All narratives" title="The full ranking.">
+          <span className={`text-muted ${monoMeta}`}>Ranked by stage, then size of the move vs BTC</span>
+        </SectionHeading>
+        <div className="mt-8 border border-ink bg-surface">
+          <div className={`hidden gap-5 bg-ink px-5 py-3 text-paper/80 lg:grid ${COLS} ${monoMeta}`}>
+            <span>#</span>
+            <span>Narrative</span>
+            <span>Stage</span>
+            <span>Momentum 7D</span>
+            <span>Breadth</span>
+            <span>vs BTC 7D</span>
+            <span>Trend 30D</span>
+            <span />
+          </div>
+          <ul className="divide-y divide-line">
+            {snapshot.narratives.map((reading, i) => (
+              <NarrativeRow key={reading.id} reading={reading} rank={i + 1} />
+            ))}
+          </ul>
+        </div>
+        <p className="mt-3 text-[12px] text-muted">
+          Each narrative is measured through a basket of representative assets, not every token in the sector.
+        </p>
+      </section>
+
+      <section className="mt-16 grid gap-8 bg-ink p-6 text-paper sm:p-10 lg:grid-cols-12">
+        <div className="lg:col-span-4">
+          <div className={`text-accent ${monoMeta}`}>How the radar classifies</div>
+          <h2 className="mt-3 font-display text-[28px] font-bold leading-[1.05] tracking-[-0.025em] sm:text-[34px]">
+            Fixed rules. No AI in the classification.
+          </h2>
+          <p className="mt-4 text-[14px] leading-relaxed text-paper/65">
+            Relative performance is the median 7-day return of a narrative’s assets minus BTC’s. Breadth is the share
+            of assets up over 7 days; participation is the share beating BTC. The first rule that matches sets the
+            stage.
+          </p>
+        </div>
+        <dl className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:col-span-8">
+          {RULES.map(([name, rule]) => (
+            <div key={name} className="border-t border-paper/15 pt-3">
+              <dt className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-paper">{name}</dt>
+              <dd className="mt-1.5 text-[13px] leading-relaxed text-paper/70">{rule}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="mt-16">
+        <SectionHeading label="Lifecycle stages" title="What each stage means." />
+        <dl className="mt-8 grid border-l border-t border-line sm:grid-cols-2 lg:grid-cols-3">
           {NARRATIVE_STATE_ORDER.map((state) => {
             const meta = NARRATIVE_STATE_META[state];
+            const count = classified.filter((n) => n.lifecycle === state).length;
             return (
-              <div key={state} className="border-b border-r border-line p-4">
-                <dt>
+              <div key={state} className="border-b border-r border-line bg-surface p-5">
+                <dt className="flex items-center justify-between gap-3">
                   <ToneBadge tone={meta.tone}>{meta.label}</ToneBadge>
+                  <span className={`text-muted ${monoMeta}`}>
+                    {count} {count === 1 ? "narrative" : "narratives"} now
+                  </span>
                 </dt>
-                <dd className="mt-2 text-[13px] leading-relaxed text-muted">{meta.description}</dd>
+                <dd className="mt-3 text-[13.5px] leading-relaxed text-ink-soft">{meta.description}</dd>
               </div>
             );
           })}
         </dl>
-        <details className="group mt-4 border-t border-line pt-4">
-          <summary className="cursor-pointer list-none font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted hover:text-ink">
-            <span className="mr-2 inline-block transition-transform group-open:rotate-90">›</span>
-            How the radar classifies
-          </summary>
-          <ul className="mt-3 max-w-3xl space-y-2 text-[13px] leading-relaxed text-ink-soft">
-            {RULES.map((rule) => (
-              <li key={rule} className="border-l-2 border-line pl-3">
-                {rule}
-              </li>
-            ))}
-          </ul>
-        </details>
       </section>
     </div>
   );
