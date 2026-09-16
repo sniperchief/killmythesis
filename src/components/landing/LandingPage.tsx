@@ -33,17 +33,17 @@ export function LandingPage() {
             KillMyThesis breaks your idea into the assumptions it depends on, tests each one against market data, and
             tells you where it is weakest, before the market does.
           </p>
-          <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+          <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">
             <Link
               href="/thesis"
-              className="inline-flex items-center gap-3 bg-ink px-6 py-4 font-mono text-[12.5px] font-semibold uppercase tracking-[0.14em] text-paper transition-colors hover:bg-accent hover:text-white"
+              className="inline-flex w-full items-center justify-center gap-3 bg-ink px-5 py-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-paper transition-colors hover:bg-accent hover:text-white sm:w-auto sm:px-6 sm:text-[12.5px] sm:tracking-[0.14em]"
             >
               Already have a thesis?
               <span aria-hidden>→</span>
             </Link>
             <Link
               href="/radar"
-              className="text-[15px] font-medium text-ink underline decoration-accent decoration-2 underline-offset-[6px] hover:decoration-ink"
+              className="text-center text-[15px] font-medium text-ink underline decoration-accent decoration-2 underline-offset-[6px] hover:decoration-ink sm:text-left"
             >
               No idea yet? Explore Narrative Radar
             </Link>

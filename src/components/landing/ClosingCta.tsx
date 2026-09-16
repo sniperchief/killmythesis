@@ -16,17 +16,17 @@ export function ClosingCta() {
             wrong.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6">
           <Link
             href="/thesis"
-            className="inline-flex items-center gap-3 bg-ink px-6 py-4 font-mono text-[12.5px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white hover:text-ink"
+            className="inline-flex w-full items-center justify-center gap-3 bg-ink px-5 py-4 font-mono text-[12px] font-semibold uppercase tracking-[0.12em] text-white transition-colors hover:bg-white hover:text-ink sm:w-auto sm:px-6 sm:text-[12.5px] sm:tracking-[0.14em]"
           >
             Already have a thesis?
             <span aria-hidden>→</span>
           </Link>
           <Link
             href="/radar"
-            className="text-[15px] font-semibold text-white underline decoration-white/60 decoration-2 underline-offset-[6px] hover:decoration-white"
+            className="text-center text-[15px] font-semibold text-white underline decoration-white/60 decoration-2 underline-offset-[6px] hover:decoration-white sm:text-left"
           >
             Explore Narrative Radar
           </Link>
