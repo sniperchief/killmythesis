@@ -50,10 +50,12 @@ export function Footer() {
             <p className="mt-4 max-w-xs text-[14.5px] leading-relaxed text-paper/65">
               An AI research desk that stress-tests your trade idea before the market does.
             </p>
-            <div className={`mt-5 flex items-center gap-2 text-paper/55 ${monoMeta}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-support" : "bg-caution"}`} />
-              {live ? "Live · Bitget market data" : "UI preview · sample data"}
-            </div>
+            {!live && (
+              <div className={`mt-5 flex items-center gap-2 text-paper/55 ${monoMeta}`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-caution" />
+                UI preview · sample data
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-2">

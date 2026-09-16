@@ -25,7 +25,8 @@ export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const live = DATA_MODE === "live";
-  const status = live ? "Live · Bitget market data" : "UI preview · sample data";
+  // Only sample mode is flagged; live needs no badge.
+  const sampleNote = "UI preview · sample data";
 
   return (
     <header className="pointer-events-none sticky top-0 z-40 px-3 pt-3 sm:px-6 sm:pt-4">
@@ -59,12 +60,11 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 md:ml-0">
-          <span
-            title={status}
-            className={`mr-1 hidden h-2 w-2 rounded-full sm:block ${live ? "bg-support" : "bg-caution"}`}
-          >
-            <span className="sr-only">{status}</span>
-          </span>
+          {!live && (
+            <span title={sampleNote} className="mr-1 hidden h-2 w-2 rounded-full bg-caution sm:block">
+              <span className="sr-only">{sampleNote}</span>
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
@@ -108,10 +108,12 @@ export function Header() {
               </Link>
             );
           })}
-          <div className="flex items-center gap-2 px-4 pb-2 pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-paper/50">
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-support" : "bg-caution"}`} />
-            {status}
-          </div>
+          {!live && (
+            <div className="flex items-center gap-2 px-4 pb-2 pt-3 font-mono text-[10.5px] uppercase tracking-[0.12em] text-paper/50">
+              <span className="h-1.5 w-1.5 rounded-full bg-caution" />
+              {sampleNote}
+            </div>
+          )}
         </nav>
       )}
     </header>

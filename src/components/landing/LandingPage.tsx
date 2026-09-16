@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { Label } from "@/components/ui/primitives";
 import { PAGE, monoMeta } from "@/components/ui/styles";
-import { DATA_MODE } from "@/lib/config";
 import { ClosingCta } from "./ClosingCta";
 import { HowItWorks } from "./HowItWorks";
 import { ProblemSection } from "./ProblemSection";
@@ -19,14 +17,11 @@ const EXAMPLE = {
 };
 
 export function LandingPage() {
-  const live = DATA_MODE === "live";
-
   return (
     <>
       <section className={`${PAGE} grid items-center gap-12 pb-16 pt-12 sm:pt-16 lg:grid-cols-12 lg:gap-14 lg:pb-24 lg:pt-20`}>
         <div className="lg:col-span-7">
-          <Label>AI research desk · {live ? "live Bitget market data" : "sample data preview"}</Label>
-          <h1 className="mt-6 font-display text-[44px] font-bold leading-[1] tracking-[-0.035em] sm:text-[64px] xl:text-[76px]">
+          <h1 className="font-display text-[44px] font-bold leading-[1] tracking-[-0.035em] sm:text-[64px] xl:text-[76px]">
             Bring me your trade idea. I’ll try to prove you{" "}
             <span className="relative inline-block">
               wrong
