@@ -18,6 +18,7 @@ import { NARRATIVE_STATE_META } from "@/lib/labels";
 import { RADAR_RULES, fmtFunding, fmtPct, fmtPts, fmtShare, fmtUsd } from "@/lib/radar/engine";
 import { BENCHMARK_SYMBOL, universeSymbols } from "@/lib/radar/taxonomy";
 import type { NarrativeExplanation, NarrativeReading, RadarSnapshot } from "@/lib/radar/types";
+import { allowedNumbers, ungroundedNumbers } from "@/server/llm/grounding";
 import { LlmConfigError, LlmOutputError, createDefaultLlm, type StructuredLlm } from "@/server/llm/structured";
 import { containsTradeInstruction } from "@/server/research/synthesizer";
 
@@ -114,22 +115,7 @@ export function narrativeFacts(reading: NarrativeReading, snapshot: RadarSnapsho
 
 // ─── Validation ──────────────────────────────────────────────────────────────
 
-const NUMBER = /\d+(?:\.\d+)?/g;
-const numbersIn = (text: string) => (text.replace(/(\d),(?=\d{3})/g, "$1").match(NUMBER) ?? []);
-
-export function allowedNumbers(facts: object): number[] {
-  return [...new Set(numbersIn(JSON.stringify(facts)).map(Number))];
-}
-
-/** A number in prose is grounded if some fact value rounds to it at the precision written. */
-export function ungroundedNumbers(text: string, allowed: number[]): string[] {
-  return numbersIn(text).filter((token) => {
-    const value = Number(token);
-    const decimals = token.includes(".") ? token.split(".")[1].length : 0;
-    const tolerance = 0.5 * 10 ** -decimals + 1e-9;
-    return !allowed.some((a) => Math.abs(a - value) <= tolerance);
-  });
-}
+export { allowedNumbers, ungroundedNumbers };
 
 const STAGE_CLAIM = /\b(?:is|remains|now|as)\s+(?:an?\s+)?(emerging|accelerating|crowded|exhausting|fading|stable)\b/gi;
 const ALL_SYMBOLS = new Set(universeSymbols());

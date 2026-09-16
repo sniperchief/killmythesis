@@ -66,7 +66,9 @@ function balance(items: Evidence[]) {
   return { s, c, ratio: s + c > 0 ? s / (s + c) : null };
 }
 
-const byWeightDesc = (a: Evidence, b: Evidence) => weightOf(b) - weightOf(a);
+/** Heaviest first; ties broken by id so the order never depends on input order. */
+const byWeightDesc = (a: Evidence, b: Evidence) =>
+  weightOf(b) - weightOf(a) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 export function classifyAssumption(assumption: Assumption, evidence: Evidence[]): AssumptionScore {
   const linked = evidence.filter((e) => e.assumptionIds.includes(assumption.id));

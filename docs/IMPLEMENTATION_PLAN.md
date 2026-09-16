@@ -92,6 +92,11 @@ POST /api/research                     src/app/api/research/route.ts → server/
 - An end-to-end run with real Anthropic calls. No API key was available during development.
 - MCP success-payload parsing, because the server returned no usable data.
 
+### Data used and measurable invalidation
+
+- **Data used** (`lib/snapshot.ts`, `components/brief/DataUsed.tsx`). Every brief stores the findings it used, with their validated values (`rawValue`) and source timestamps, which sources answered, and each call that returned no usable data. It is shown as a compact "Data used" panel so every number behind a verdict can be checked. It doesn't make a re-run repeatable: evidence judgments are still made by the LLM on each run.
+- **Measurable invalidation** (`server/research/signals.ts`). Code turns findings into measurable signals. Thresholds are the metric's neutral line (0, 50%, 1.00×, RSI or Fear & Greed 50) or a level read from the data (20/50-day SMA). Only thresholds that contradict the thesis's direction and haven't been crossed are offered. The model picks 1–2 threshold ids per condition, and code renders the text with the current value. Its one-sentence rationale is dropped if it cites a number that isn't in the facts. If the model offers none, code builds conditions from the strongest supporting evidence. If no metric returned data, the brief says so.
+
 ### Narrative Radar (live)
 
 ```

@@ -207,16 +207,30 @@ export const mapperResponder: Responder = (request) => {
   };
 };
 
-export const synthesisResponder: Responder = () => ({
-  verdictSummary: "The price-action leg has mixed confirmation in the data that was available.",
-  assumptionReasoning: [{ assumptionId: "A2", reasoning: "Market structure supports it while technicals challenge it." }],
-  invalidation: [
-    { condition: "Daily close below the 50-day SMA while funding stays positive.", dimension: "technical" },
-    { condition: "Monitor the market.", dimension: "news" },
-  ],
-  conclusion: {
-    strongestFor: "Returns remain positive over 30 days.",
-    strongestAgainst: "Momentum readings are stretched.",
-    summary: "The thesis is partly testable with the sources that responded; the weakest assumption is A1.",
-  },
-});
+/**
+ * Brief-writer responder: pairs the first two offered thresholds into one condition and adds one
+ * condition with a made-up threshold id, which must be dropped.
+ */
+export const synthesisResponder: Responder = (request) => {
+  const facts = JSON.parse(request.prompt) as { measurableSignals: { thresholdId: string }[] };
+  const thresholdIds = facts.measurableSignals.map((s) => s.thresholdId);
+  return {
+    verdictSummary: "The price-action leg has mixed confirmation in the data that was available.",
+    assumptionReasoning: [{ assumptionId: "A2", reasoning: "Market structure supports it while technicals challenge it." }],
+    invalidation: thresholdIds.length
+      ? [
+          {
+            thresholdIds: thresholdIds.slice(0, 2),
+            assumptionIds: ["A2"],
+            rationale: "Both readings turning would remove the market confirmation the thesis relies on.",
+          },
+          { thresholdIds: ["made-up:below:0"], assumptionIds: ["A1"], rationale: "Invented." },
+        ]
+      : [],
+    conclusion: {
+      strongestFor: "Returns remain positive over 30 days.",
+      strongestAgainst: "Momentum readings are stretched.",
+      summary: "The thesis is partly testable with the sources that responded; the weakest assumption is A1.",
+    },
+  };
+};

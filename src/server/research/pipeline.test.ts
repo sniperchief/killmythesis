@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import type { ResearchEvent } from "@/lib/research/run-state";
+import type { ResearchBrief } from "@/lib/types";
 import type { StructuredRequest } from "@/server/llm/structured";
 import { runResearch, runResearchSafely } from "./pipeline";
 import {
@@ -59,9 +60,22 @@ describe("research pipeline", () => {
 
     // Scoring is deterministic and coverage reflects the failures (3 of 5 dimensions).
     expect(brief.brief.score.coverage).toBeCloseTo(0.6);
-    expect(brief.brief.invalidation).toEqual([
-      { condition: "Daily close below the 50-day SMA while funding stays positive.", dimension: "technical" },
-    ]);
+
+    // Invalidation comes only from offered thresholds; the model's invented threshold id was dropped.
+    expect(brief.brief.invalidation).toHaveLength(1);
+    const [condition] = brief.brief.invalidation;
+    expect(condition.condition).toMatch(/^The thesis is weakened if .+ while .+\.$/);
+    const snapshot = brief.brief.snapshot!;
+    const snapshotIds = new Set(snapshot.findings.map((f) => f.id));
+    for (const s of condition.signals ?? []) expect(snapshotIds.has(s.findingId)).toBe(true);
+
+    // The data-used snapshot holds the values used and the failed calls; every piece of evidence traces to it.
+    expect(snapshot).toMatchObject({ subject: "SOL", symbols: ["SOL"], sources: brief.brief.sources });
+    expect(snapshot.findings.find((f) => f.id === "ms-returns")?.rawValue).toBeDefined();
+    expect(snapshot.failures.some((f) => f.dimension === "positioning" && f.reason === "timeout")).toBe(true);
+    for (const e of brief.brief.evidence) {
+      expect(snapshot.findings.find((f) => f.id === e.findingId)?.observation).toBe(e.finding);
+    }
 
     // Events arrive in the order the UI expects.
     const types = events.map((e) => e.type);
@@ -111,5 +125,30 @@ describe("research pipeline", () => {
     expect(events).toEqual([
       { type: "error", message: "Research could not be completed: Thesis parser returned a testable thesis without assumptions." },
     ]);
+  });
+
+  it("keeps the data-used panel and invalidation honest when market data is missing", async () => {
+    const deps = {
+      llm: fakeLlm({ "Thesis parser": () => SOL_PARSE, "Evidence mapper": mapperResponder, "Brief writer": synthesisResponder }),
+      rest: fakeRest({ spot: false, futures: false }),
+      mcp: failingMcp(),
+      publicData: fakePublicData(),
+    };
+    const events = await collect((emit) => runResearch(RAW, emit, deps));
+    const found = events.find((e) => e.type === "brief");
+    if (found?.type !== "brief") throw new Error(`No brief: ${JSON.stringify(events.at(-1))}`);
+    const brief: ResearchBrief = found.brief;
+
+    // Only on-chain data came back, and the snapshot says exactly that, including the failed price and positioning calls.
+    expect(brief.snapshot!.findings.every((f) => f.dimension === "onchain")).toBe(true);
+    expect(brief.snapshot!.failures.some((f) => f.dimension === "positioning" && f.reason === "timeout")).toBe(true);
+    expect(brief.snapshot!.failures.some((f) => f.dimension === "market_structure" && f.reason === "timeout")).toBe(true);
+
+    // Invalidation only watches metrics that returned data (on-chain), never the failed price or positioning feeds.
+    expect(brief.invalidation.length).toBeGreaterThan(0);
+    for (const condition of brief.invalidation) {
+      expect(condition.dimension).toBe("onchain");
+      for (const s of condition.signals ?? []) expect(s.findingId.startsWith("chain-")).toBe(true);
+    }
   });
 });

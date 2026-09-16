@@ -81,6 +81,8 @@ export interface VerifyLink {
 
 export interface Evidence {
   id: string;
+  /** The deterministic finding this evidence interprets (absent on briefs saved before snapshots). */
+  findingId?: string;
   source: string;
   dimension: DimensionId;
   topic: string;
@@ -144,9 +146,56 @@ export interface ThesisScore {
   coverage: number;
 }
 
+/** One measurable clause of an invalidation condition. Every value comes from the research snapshot. */
+export interface InvalidationSignal {
+  findingId: string;
+  label: string;
+  /** The value in the snapshot, formatted. */
+  current: string;
+  comparator: "below" | "above";
+  /** A data-derived or neutral level (0, 50%, 1.00×, a moving average from the candles). */
+  threshold: string;
+}
+
 export interface InvalidationCondition {
+  /** Rendered deterministically from `signals` on current briefs. */
   condition: string;
   dimension: DimensionId;
+  signals?: InvalidationSignal[];
+  assumptionIds?: string[];
+  /** Why crossing it would weaken the thesis (AI, grounded; omitted when it failed validation). */
+  rationale?: string;
+}
+
+// ─── Research snapshot ───────────────────────────────────────────────────────
+
+/** A finding exactly as the research used it, including the validated values behind it. */
+export interface SnapshotFinding {
+  id: string;
+  dimension: DimensionId;
+  source: string;
+  topic: string;
+  observation: string;
+  timestamp: string | null;
+  rawValue?: unknown;
+}
+
+export interface SnapshotFailure {
+  dimension: DimensionId;
+  source: string;
+  reason: string;
+}
+
+/** The data a verdict was built on, as retrieved when the research ran. Shown as "Data used". */
+export interface ResearchSnapshot {
+  version: 1;
+  /** When the market data collection finished. */
+  capturedAt: string;
+  subject: string;
+  symbols: string[];
+  sources: SourceCheck[];
+  findings: SnapshotFinding[];
+  failures: SnapshotFailure[];
 }
 
 /** Where a research run started. Absent for theses typed directly into KillMyThesis. */
@@ -169,6 +218,8 @@ export interface ResearchBrief {
   origin?: ResearchOrigin;
   thesis: ParsedThesis;
   sources: SourceCheck[];
+  /** Absent on sample briefs and briefs saved before snapshots existed. */
+  snapshot?: ResearchSnapshot;
   evidence: Evidence[];
   assumptions: AssumptionEvaluation[];
   score: ThesisScore;

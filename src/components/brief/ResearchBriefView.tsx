@@ -2,12 +2,13 @@ import Link from "next/link";
 import { Label, ToneBadge } from "@/components/ui/primitives";
 import { monoMeta } from "@/components/ui/styles";
 import { coverageSummary } from "@/lib/coverage";
-import { DIMENSIONS } from "@/lib/dimensions";
 import { formatDateTime } from "@/lib/format";
 import { NARRATIVE_STATE_META, TONE_TEXT, VERDICT_META } from "@/lib/labels";
 import type { ResearchBrief } from "@/lib/types";
 import { AssumptionCheck } from "./AssumptionCheck";
+import { DataUsedView } from "./DataUsed";
 import { EvidenceColumns, EvidenceLog } from "./Evidence";
+import { InvalidationView } from "./Invalidation";
 import { HistoricalStressTest } from "./HistoricalStressTest";
 import { ThesisScorePanel } from "./ThesisScorePanel";
 
@@ -46,28 +47,13 @@ export function ResearchBriefView({ brief }: { brief: ResearchBrief }) {
         <ThesisScorePanel score={brief.score} />
       </section>
 
+      <DataUsedView brief={brief} />
+
       <EvidenceColumns brief={brief} />
 
       <AssumptionCheck brief={brief} />
 
-      <section>
-        <Label>What would invalidate this thesis</Label>
-        <ul className="mt-3 border-t border-line">
-          {brief.invalidation.map((item) => (
-            <li
-              key={item.condition}
-              className="grid grid-cols-[1.5rem_1fr] gap-x-2 gap-y-1 border-b border-line py-3 sm:grid-cols-[1.5rem_1fr_auto] sm:gap-x-4"
-            >
-              <span className="font-mono text-[13px] text-challenge">×</span>
-              <span className="text-[14px] leading-snug">{item.condition}</span>
-              <span className={`col-start-2 text-muted sm:col-start-auto ${monoMeta}`}>
-                {DIMENSIONS[item.dimension].label}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-[12px] text-muted">These are conditions to monitor, not predictions.</p>
-      </section>
+      <InvalidationView brief={brief} />
 
       <section className="border border-ink bg-surface p-6">
         <Label className="text-ink">Research conclusion</Label>

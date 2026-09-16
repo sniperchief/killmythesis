@@ -66,6 +66,7 @@ export function buildEvidence(thesis: ParsedThesis, findings: RawFinding[], outp
 
     grouped.set(key, {
       id: `${finding.id}-${j.direction.slice(0, 3)}`,
+      findingId: finding.id,
       source: finding.source,
       dimension: finding.dimension,
       topic: finding.topic,

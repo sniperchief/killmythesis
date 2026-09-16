@@ -11,6 +11,7 @@ import { coverageSummary } from "@/lib/coverage";
 import { DIMENSIONS } from "@/lib/dimensions";
 import type { ResearchEvent, RunOptions } from "@/lib/research/run-state";
 import { evaluateThesis } from "@/lib/scoring";
+import { buildResearchSnapshot } from "@/lib/snapshot";
 import type { DimensionId, ResearchBrief, SourceCheck } from "@/lib/types";
 import { FAILURE_TEXT, failureFromError, type ConnectorFailure } from "@/server/connectors/types";
 import { LlmConfigError, LlmOutputError } from "@/server/llm/structured";
@@ -24,6 +25,7 @@ import {
 import { COLLECTORS } from "./collectors";
 import { mapEvidence } from "./mapper";
 import { parseThesis, plannedDimensions } from "./parser";
+import { measurableSignals } from "./signals";
 import { synthesize } from "./synthesizer";
 import { TIMEOUTS, withTimeout } from "./timeouts";
 import type { CollectorContext, DimensionOutcome, Memo, ResearchDeps, ResearchTarget } from "./types";
@@ -113,6 +115,8 @@ export async function runResearch(
     }),
   );
   signal?.throwIfAborted();
+  const now = deps.now ?? (() => new Date());
+  const collectedAt = now();
 
   const sources = outcomes.map(toSourceCheck);
   const findings = outcomes.flatMap((o) => o.findings);
@@ -130,9 +134,30 @@ export async function runResearch(
   const evidence = await mapEvidence(deps.llm, thesis, findings, signal);
   const evaluation = evaluateThesis(thesis, evidence, sources);
   const coverage = coverageSummary(sources);
-  const synthesis = await synthesize(deps.llm, thesis, evidence, evaluation, sources, coverage, signal);
+  const signals = measurableSignals(findings, thesis.stance, target.symbols[0]);
+  const synthesis = await synthesize(deps.llm, { thesis, evidence, evaluation, sources, signals, coverage }, signal);
 
-  const createdAt = (deps.now ?? (() => new Date()))();
+  // The data used: every value the research used, source timestamps, and what failed.
+  const snapshot = buildResearchSnapshot({
+    capturedAt: collectedAt.toISOString(),
+    subject: target.subject,
+    symbols: target.symbols,
+    sources,
+    findings: findings.map(({ id, dimension, source, topic, observation, timestamp, rawValue }) => ({
+      id,
+      dimension,
+      source,
+      topic,
+      observation,
+      timestamp,
+      ...(rawValue === undefined ? {} : { rawValue }),
+    })),
+    failures: outcomes.flatMap((o) =>
+      o.failures.map((f) => ({ dimension: o.dimension, source: f.source, reason: FAILURE_TEXT[f.reason] })),
+    ),
+  });
+
+  const createdAt = now();
   const brief: ResearchBrief = {
     id: `kmt-${createdAt.getTime().toString(36)}-${crypto.randomUUID().slice(0, 8)}`,
     createdAt: createdAt.toISOString(),
@@ -140,6 +165,7 @@ export async function runResearch(
     ...(narrative ? { origin: originOf(narrative) } : {}),
     thesis,
     sources,
+    snapshot,
     evidence,
     assumptions: evaluation.assumptions.map((a) => ({ ...a, reasoning: synthesis.reasoningByAssumption[a.assumptionId] ?? "" })),
     score: evaluation.score,
