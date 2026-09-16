@@ -21,7 +21,7 @@ export function ClosingCta() {
             href="/thesis"
             className="inline-flex items-center gap-3 bg-ink px-6 py-4 font-mono text-[12.5px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white hover:text-ink"
           >
-            Kill my thesis
+            Already have a thesis?
             <span aria-hidden>→</span>
           </Link>
           <Link
