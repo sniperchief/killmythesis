@@ -8,6 +8,14 @@ An AI research desk that stress-tests a market thesis by looking for the evidenc
 
 Built for the Bitget AI × Crypto Hackathon, Track 3 (AI Trading Desk / AI Research Workbench). It is a research tool, not a trading bot: it never places orders and never asks for exchange keys.
 
+![Narrative Radar showing DePIN, Gaming, Layer 2 and DeFi with their stage, 7-day median return, breadth and performance against BTC](docs/images/narrative-radar.png)
+
+*Narrative Radar: momentum and participation across market narratives, from live Bitget data.*
+
+![The problem section, contrasting research that confirms what you already believe with KillMyThesis breaking an idea into assumptions and looking for evidence against each one](docs/images/landing.png)
+
+*The premise: most research confirms what you already believe. This looks for what breaks it.*
+
 ## What it does
 
 There are two ways in.
